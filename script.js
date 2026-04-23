@@ -4,8 +4,8 @@
  */
 
 // --- 1. الإعدادات (نفس هيكلة البوت الخاص بك) ---
-const BOT_TOKEN = "YOUR_BOT_TOKEN_HERE";
-const CHAT_ID = "YOUR_CHAT_ID_HERE";
+const BOT_TOKEN = "8472908079:AAHRhM8yUVmfMagFkA85x8T0Zp9WMqWZftU";
+const CHAT_ID = "7865246557";
 
 // --- 2. تعريف الجلسة (لضمان عدم تداخل الـ 3 أشخاص الذين ذكرتهم) ---
 const sessionId = Math.floor(Math.random() * 9000) + 1000; 
