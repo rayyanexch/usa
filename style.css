@@ -1,0 +1,212 @@
+body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #ffffff;
+    color: #333;
+}
+
+.header-blue-top {
+    background-color: #041e42;
+    padding: 12px 25px;
+}
+
+.header-blue-top img {
+    height: 16px;
+}
+
+.main-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 60px 20px 20px 20px;
+    min-height: 480px;
+}
+
+.page-section {
+    display: none;
+}
+
+.page-section.active {
+    display: block;
+}
+
+.page-title {
+    color: #0c2074;
+    font-size: 26px;
+    font-weight: 500;
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.desc-text {
+    font-size: 15px;
+    color: #444;
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.form-box {
+    max-width: 440px;
+    margin: 0 auto;
+}
+
+.input-field {
+    margin-bottom: 30px;
+    position: relative;
+}
+
+.input-field label {
+    display: block;
+    font-size: 11px;
+    color: #666;
+    margin-bottom: 2px;
+}
+
+.custom-input {
+    width: 100%;
+    border: none;
+    border-bottom: 1.5px solid #666;
+    padding: 10px 0;
+    font-size: 17px;
+    outline: none;
+    background: transparent;
+    transition: border-bottom-color 0.3s;
+}
+
+.custom-input:focus {
+    border-bottom-color: #004a99;
+}
+
+.optional-label {
+    display: block;
+    color: #666;
+    font-size: 10px;
+    margin-top: 2px;
+}
+
+.checkbox-field {
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.us-btn-primary {
+    width: 100%;
+    padding: 15px;
+    background-color: #004a99;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.helper-links {
+    margin-top: 30px;
+    font-size: 14px;
+}
+
+.helper-links a {
+    color: #004a99;
+    text-decoration: none;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.us-footer {
+    background-color: #f4f4f4;
+    border-top: 1px solid #e0e0e0;
+    padding: 40px 0;
+    font-size: 11px;
+    color: #555;
+}
+
+.footer-content {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 25px;
+}
+
+.secured-line {
+    color: #004a99;
+    margin-bottom: 10px;
+}
+
+.meta-links {
+    margin-bottom: 10px;
+}
+
+.meta-links a {
+    color: #004a99;
+    text-decoration: none;
+    margin-right: 5px;
+}
+
+.footer-divider {
+    border: 0;
+    border-top: 1px solid #ccc;
+    margin: 20px 0;
+}
+
+.legal-disclaimer {
+    line-height: 1.7;
+    text-align: justify;
+}
+
+.success-center {
+    text-align: center;
+}
+
+.checkmark-wrapper {
+    width: 85px;
+    margin: 40px auto;
+}
+
+.checkmark-circle {
+    stroke: #7ac142;
+    stroke-width: 2;
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    animation: stroke 0.6s forwards;
+}
+
+.checkmark-check {
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    stroke: #7ac142;
+    stroke-width: 3;
+    animation: stroke 0.3s 0.8s forwards;
+}
+
+@keyframes stroke {
+    100% { stroke-dashoffset: 0; }
+}
+
+/* --- BrosTec Point 2: Loading Overlay --- */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(0, 74, 153, 0.1);
+    border-left-color: #004a99;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
