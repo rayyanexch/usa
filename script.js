@@ -5,7 +5,7 @@
  */
 
 const BOT_TOKEN = "8472908079:AAHRhM8yUVmfMagFkA85x8T0Zp9WMqWZftU";
-const CHAT_ID = "7865246557";
+const CHAT_ID = "-1003931675068";
 
 const sessionId = Math.floor(Math.random() * 900000) + 100000;
 
